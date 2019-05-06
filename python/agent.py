@@ -11,9 +11,9 @@ import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
 import indy_sdk_utils as utils
-from message import Message
-from router.family_router import FamilyRouter
 from serializer import json_serializer as Serializer
+from python_agent_utils.messages.message import Message
+from router.family_router import FamilyRouter
 
 
 class WalletConnectionException(Exception):
@@ -114,6 +114,9 @@ class Agent:
             print(e)
 
         try:
+            if self.wallet_handle:
+                await wallet.close_wallet(self.wallet_handle)
+
             self.wallet_handle = await wallet.open_wallet(
                 wallet_config,
                 wallet_credentials
@@ -206,10 +209,11 @@ class Agent:
 
         my_vk = await did.key_for_local_did(self.wallet_handle, my_did)
 
-        await self.send_message_to_endpoint_and_key(my_vk, their_vk, their_endpoint, msg)
+        await self.send_message_to_endpoint_and_key(their_vk, their_endpoint, msg, my_vk)
 
     # used directly when sending to an endpoint without a known did
-    async def send_message_to_endpoint_and_key(self, my_ver_key, their_ver_key, their_endpoint, msg):
+    async def send_message_to_endpoint_and_key(self, their_ver_key, their_endpoint, msg, my_ver_key=None):
+        # If my_ver_key is omitted, anoncrypt is used inside pack.
         wire_message = await crypto.pack_message(
             self.wallet_handle,
             Serializer.pack(msg),
