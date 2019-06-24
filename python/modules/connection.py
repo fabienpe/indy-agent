@@ -11,6 +11,7 @@ import re
 from indy import did, pairwise, non_secrets, error
 
 import indy_sdk_utils as utils
+import serializer.json_serializer as Serializer
 from python_agent_utils.messages.connection import Connection as ConnectionMessage
 from python_agent_utils.messages.message import Message
 from router.simple_router import SimpleRouter
